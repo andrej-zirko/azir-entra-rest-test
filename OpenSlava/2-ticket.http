@@ -1,0 +1,153 @@
+@credentialType = AirlineTicketNameCredentialType3
+@contractName = AirlineTicketNameContract3
+@webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
+
+### Admin access token endpoint
+# @name adminLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{adminScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Create contract
+# @name contract
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts
+Authorization: Bearer {{adminLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "{{contractName}}",
+  "rules": {
+    "attestations": {
+      "idTokenHints": [
+        {
+          "mapping": [
+            {
+              "outputClaim": "name",
+              "required": true,
+              "inputClaim": "name",
+              "indexed": false
+            },
+            {
+              "outputClaim": "flightNumber",
+              "required": true,
+              "inputClaim": "flight_number",
+              "indexed": false
+            }
+          ],
+          "required": true
+        }
+      ]
+    },
+    "validityInterval": 2592000,
+    "vc": {
+      "type": [
+        "{{credentialType}}"
+      ]
+    }
+  },
+  "displays": [{
+    "locale": "en-US",
+    "card": {
+      "backgroundColor": "#FFDAB9",
+      "description": "OpenSlava Airline Ticket",
+      "issuedBy": "OpenSlava Airline Ticket Issuer",
+      "textColor": "#000080",
+      "title": "OpenSlava Airline Ticket",
+      "logo": {
+        "description": "OpenSlava Airline Ticket",
+        "uri": "https://azir-entra-issuer.pages.dev/OpenSlava/airline-ticket.png"
+      }
+    },
+    "consent": {
+      "instructions": "Please accept the OpenSlava Airline Ticket credential",
+      "title": "Do you want to accept the OpenSlava Airline Ticket credenial?"
+    },
+    "claims": [
+      {
+        "claim": "vc.credentialSubject.name",
+        "label": "Name (Firstname and Lastname)",
+        "type": "String"
+      },
+      {
+        "claim": "vc.credentialSubject.flightNumber",
+        "label": "Flight number",
+        "type": "String"
+      }
+    ]
+  }]
+}
+
+### Issuance Access Token Endpoint
+# @name issuanceLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{issuanceScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Issuance
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createIssuanceRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "includeQRCode": false,
+    "callback": {
+        "url": "{{webhook}}",
+        "state": "my-state",
+        "headers": {
+            "api-key": "my-api-key"
+        }
+    },
+    "authority": "{{authority}}",
+    "registration": {
+        "clientName": "OpenSlava Airline Ticket Issuer"
+    },
+    "type": "{{credentialType}}",
+    "claims": {
+        "name": "Andrej Zirko",
+        "flight_number": "8875"
+    },
+    "manifest": "{{contract.response.body.manifestUrl}}"
+}
+
+### Presentation
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "includeReceipt": true,
+  "authority": "{{authority}}",
+  "registration": {
+    "clientName": "Airport Ticket Verifier"
+  },
+  "callback": {
+    "url": "{{webhook}}",
+    "state": "my-verification-state",
+    "headers": {
+      "api-key": "my-api-key"
+    }
+  },
+  "requestedCredentials": [
+    {
+      "type": "{{credentialType}}",
+      "purpose": "Please present yourself",
+      "acceptedIssuers": [
+        "{{authority}}"
+      ],
+      "configuration": {
+        "validation": {
+          "allowRevoked": false,
+          "validateLinkedDomain": true
+        }
+      }
+    }
+  ]
+}

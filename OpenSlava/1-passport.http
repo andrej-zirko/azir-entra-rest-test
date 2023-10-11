@@ -1,0 +1,181 @@
+@credentialType = PassportNameCredentialType3
+@contractName = PassportNameContract3
+@webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
+
+### Admin access token endpoint
+# @name adminLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{adminScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Create contract
+# @name contract
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts
+Authorization: Bearer {{adminLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "{{contractName}}",
+  "rules": {
+    "attestations": {
+      "idTokenHints": [
+        {
+          "mapping": [
+            {
+              "outputClaim": "id",
+              "required": true,
+              "inputClaim": "id",
+              "indexed": true
+            },
+            {
+              "outputClaim": "photo",
+              "required": true,
+              "inputClaim": "photo",
+              "indexed": false
+            },
+            {
+              "outputClaim": "givenName",
+              "required": true,
+              "inputClaim": "given_name",
+              "indexed": false
+            },
+            {
+              "outputClaim": "familyName",
+              "required": true,
+              "inputClaim": "family_name",
+              "indexed": false
+            }
+          ],
+          "required": true
+        }
+      ]
+    },
+    "validityInterval": 2592000,
+    "vc": {
+      "type": [
+        "{{credentialType}}"
+      ]
+    }
+  },
+  "displays": [{
+    "locale": "en-US",
+    "card": {
+      "backgroundColor": "#8B0000",
+      "description": "OpenSlava Passport",
+      "issuedBy": "OpenSlava Passport Issuer",
+      "textColor": "#FFD700",
+      "title": "OpenSlava Passport",
+      "logo": {
+        "description": "OpenSlava Passport",
+        "uri": "https://azir-entra-issuer.pages.dev/OpenSlava/passport.png"
+      }
+    },
+    "consent": {
+      "instructions": "Please accept the OpenSlava Passport credential",
+      "title": "Do you want to accept the OpenSlava Passport credenial?"
+    },
+    "claims": [
+      {
+        "claim": "vc.credentialSubject.id",
+        "label": "Id",
+        "type": "String"
+      },
+      {
+        "claim": "vc.credentialSubject.givenName",
+        "label": "Name",
+        "type": "String"
+      },
+      {
+        "claim": "vc.credentialSubject.familyName",
+        "label": "Surname",
+        "type": "String"
+      },
+      {
+        "claim": "vc.credentialSubject.photo",
+        "label": "Photo",
+        "type": "image/jpg;base64url"
+      }
+    ]
+  }]
+}
+
+### Issuance Access Token Endpoint
+# @name issuanceLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{issuanceScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Issuance
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createIssuanceRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "includeQRCode": false,
+    "callback": {
+        "url": "{{webhook}}",
+        "state": "my-state",
+        "headers": {
+            "api-key": "my-api-key"
+        }
+    },
+    "authority": "{{authority}}",
+    "registration": {
+        "clientName": "OpenSlava Passport Issuer"
+    },
+    "type": "{{credentialType}}",
+    "claims": {
+        "id": "1234",
+        "given_name": "Andrej",
+        "family_name": "Zirko",
+        "photo": "_9j_4AAQSkZJRgABAQEASABIAAD_2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4-JS5ESUM8SDc9Pjv_2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv_wAARCACAAIADASIAAhEBAxEB_8QAHAAAAgMBAQEBAAAAAAAAAAAABAUCBgcDAQAI_8QAOxAAAgEDAwIDBgQDBwUBAAAAAQIDAAQRBRIhMUEGE1EHIjJhcYEUkaGxQsHRFiNSYnLh8BUkJlODwv_EABkBAAMBAQEAAAAAAAAAAAAAAAIDBAEABf_EACIRAAICAwEAAgIDAAAAAAAAAAABAhEDEiExE0EiUTJhcf_aAAwDAQACEQMRAD8AUWl2rQEOxYJ2Y9KL_EW9zp5wfcd8be2fWkkW-0gbfGSe5HcV3tNVVYZLc2ihDzuHb514soN-EyLVD4X06O1F68MgWNdzKrZqva8llbLDdWZHlSDgH4lqMutynYRKXjGAyBiM1XbiYySYZiFycKecCtwYcm205WN2R3mu0mYfiB5n-HB-Gg5tSEEkgjBeUnAYnoKGncwFvn8PNAgn8-5r04wQcVYcJJJzieVm7hSeB9qLiWFcZP5DFK4idw7_AEFGRscABHP2xTVwOh3a3NqhGcn6VZIb6yvoIY_OMUkJJUEdap1uWJA2rn58_vRb4giDTRSop6NFgVjVo1Kix3_k3MDMbWRCOrtz9s5xSm4meJ0MUZjVQBuT9_rQtrrd9GoiZvNtmOz3lG75fQ0_js0vLBniXCyDnjocdf8AnzqeWPvAZQUhHfJb3dmoVn3qeTjGart3ZT24343p_iHam7HyWKlsHPIzmvPPPZv0p2PC4qmwItoXaHafjbphjcUxgduTim93btbXr28kMW-I7c7aloYitb8yqoGcbu3cUd4jHm67MbdTIGCnK-92p0YR-wt5eIGl86Vn48sdPir4SQBAkhGcYIpZqa30hVIIXA-R5NCQ_iQC8wyYzyG6rXnLEn1MnUbGrT28TjHAbuaT3U26VgG4z2qJcvLgnC968VRv9QO1Ohj1DSoGkJeTBOQKifQV6DlmFdbeHzJQMfOneD4q-BFhYy3TYUEj5U-tvD0k8giUlj3weBRml2TRQpEq7S3Mj_yFW_SLaOKDzQoweF-gpdtssWNJCe18BwtEDKcE_wCHjFdb_RIbGz8hGLEgqFJz14_nVoNyEUnGAvelYia9uWnb4Izx9f8Ab-dH4ZrZVodCCR3aE87gV-WO_wCVWG2sytmY0fy5NrYbONrAVxZity3QAuV_Qiu-lahDc37xvgpKeRnv0P55oXJC9WmZ5rTTHVJWihMe5vejxja3cUCRe9Np_Otu_slpp1OCW6so5TM7Btxzk4_2prF4V0mC9EiaVb7duMbAaJSEtGARTXtoskxAGFx73IqI8Q6pt2pc-WP8igVoXtd0-CzFs1vbJAGj5CKADg_L61lgo49BlwskWpRmcxqRuHTnrUNWuTDdqQitvj9_Pf61X5mKzcZUg8fKiJLp7kKsvDr1J7ip_iVpiFCnaPchtxUcj58V8TtiLMcNjgV60RCEIQPU1zaMhipbccU1BAsZPndM54p1pltLFJ5vlhu_vHAFBRWuya3JHDjOfuatdpp6XFsqOM-gPT8qGcv0W4odIHV54-MwEdCFcGrFo2sC4RIU4PQLQC6XHBE39zGoI52g80PpDImrqyAKpOMCgKo39lk1i7ntU2vhc85JwKCs_Ekzxi3ghgYL0xIP2zVm1TQvx9lEXAMmzPJpRbeF7ZZCLix3burB8UVNAtpo4alHJBoYvJIysgkaWTjgdMY_Ol3hG3S4v0kY5w-R8-N374q-DSYf7NXlnI7yQmMkCQ5Kgds1U9D0xtLuBszsILD8qXJUrYva7ouv4iSS6tCASFm5-QwaZXN5PHcBUUBfU1VLN5wVyzYWYE5607vwbq3Pk4aRcHk1sJpxsRTKn7ZCGtoVZQSISyn05H9KxgVs_taQvp1m5Xn8Mc_pWMjrVERLJ3C4AkByc4wa9WRZcAqQ2exrzAfq614IZFPHT1rgTtGvvkg45qciMrh1JOeuemKHZXyOCRXWPKZ3lulZRgxt2Wa3JwN8RH5VaNIlUON3bpVGnbc0TQoy7AFZgfi5zVwtiv4W2mU_EME0maovwyv0c6lcqts30pPoyl9QiAILE5-lR1K6ZgI1HBHeg7C2nW482GUIwB6Ec0Ksp_w2a6mxpcc6hWIXBUHmgbO8jc_L50k0aZ_KXzSJJggXJYEgelGWDiXUGj2gAdRTm36LUUk0yyskb2zKoyrjBHXuKUalYXMO2K1iLCP3Qx4yKZ2e8QuEXeVbgZ60BqNxfTKhjtpELf5qVk_JUTuVOgVbW78p2GN2QQM96YaZpt3ul3ui7x60pmivo9MlmKMSAcDuMURp9zNHphu545T_AHe47T2FZjhUaF796cPadpxbw1asZNzxRsnJ-L3ev6Vg461vXtKl_wDCbaXBViwwp9CDWCL1qmKFMmFA4HPpU0Zk-Ikj0zWzXVh4attJNhqGmWzh0aOK6t4lDhQcgg5zxmqjr3hXwxeYvdH122sLcoF8idi53jqfdJIHT6UMW2ro2UdW42UferE4yPvX0TtuP8Q6YqVxZRWtw8bXaSBWIDRAkN8-QK5NLGqhY9wA569aOgKJXF1KY_w4O1AcsB3PzqwaPfZtFt37YZaqxycseppzbxuttFKhIIWgmkkUYm7LHdJFeRRvsVihBBx0NPNKSNYMSWsEpZgxbAHT7VXdAmS5VoCfe6in8Npu-BypB5APBpWvelsZKUR69hDqoEK2sNqjHLOvx9e2OlFW2lR6TKXgJ2EdGOTmh9OjNsokJJYcZJobxR4mGkaO0seDdPlYl9O24_SmUq8Am2vBlqes3On4jtUJkKn3gP4jSyDxXq0Z9-0MhCcgjv61Vde8QaiDbpHIygRIcjvkd6AgudVuAkpuziQkfFTZU1RApNPb9mkf9UvL3SrwvZlZZFwmWwBkUBDHrkulCzVwhdGTl6H0zxFDLpsNpcwmSbBXzAeOKAnkkSVJTM3lBycBqCH5WmjsjUe2PfHgubX2aWSXu2SZJQjkHPrj9qyGK0gaNWY4J9WrU9fc3nsiWZpDIRebst16n-tY6Sd5571tNo6Ml7Vhl1eXd3EsVzeXE0cYxGrucJ68dq-G59LMYbiF9xB9Dx_z61zFwrOqtnONp46j-oqQkWMSAYYMpVue1NoEE6nrmvCOKkFUAY_evsVhxH0FW3TbbzdNjwOqjFVHv9DWhaHbk6VbnGcoDSc3hRg_kKFtp7O482DIbuPWndjqzbgDG4kJ5GKZDTty7sZr210xDchyMEHnApUZMp1S8D47qU2ktxcKYLaBDJI78cDngd6zO61q51W4uPxDArcgKgbpHj4QP2--a0jxjhPDTWcYOJSGlx1Kg5x_z0rJJomt5pIH-KNip-1URJcjZadRS8urazuLeJ5IWhWMts6FeCD8x6UVYWtxHaQBoApDZII_WpeEvEmm2lm8WpRkic7Jm94qfRiB0Pz69eRjn3W9Hv7W2XU9JvH1HTmyWaJtzRf6sdvn-YFc0hLuSoY6Ot3a3atEsW4Z6j1o28hvJHETGNPe3HA9ao1lrccF0sslxPwPexzzXl3rNvczBzcXZ6Zyev60DSszW0afrNk8PskvYnKkxurjafmKxA_GfrV9tvGumW_grU9D8m8ea7KlHbBUHIznn5VRWVd2fe_KijVHKLXCc8YA3rwRUk_vE3fmK6cSJ9RXK16yIe3NUfYP0c2XbjivDREq-4T6UK54oWqNRHH61pXs7RtW0SaFOZbNwCD3VskffINZwjgpg-nX0rS_YzMoub62_wDbEH-6nH_6rNVLjNUnHqLVDYOsbhlwR2IqEVuVkyVx61bXt0kQjAb96Wz6ackoxGezD-lL-HvCiOdNdK5q0AmtJNwzkYArMvFunmx10xDHvRRk49QoB_ata1NFsk8yQl5FGUjX19f9zWS61PNeaq00oG4t27D0p2lK2Jlk2dIGt42trIsG5Zstx6Dj96b2eoXWk3MV3YTvbvLGCTH0b_UO_Sk8UpaKaAn4T-tFwkvp0Mh_gyn05yP50aqhLuxl4jvrC8eK9t9Pt4rycESiND5cjjqNpPut0PGQc9iOa8ReNgiwC7fSI80wtrZtRuHt1bbIffiPo4GR-2PvStr3UCSDcyfQtU84JMfDI6GdteazBpt1bRaZEYbpcO5tQSADng9qREnPPWixqGpKmwXkwX0EnFCMWzySfvQqKXhzk27Z3GYpNvbPFRgP_duPUV9I_A-1RtDm5Y_Kn_YoIl6YoJulGyUJiukcjiODj1q4-zbV10rxHGjkBZ8x7iemen6gCqgy10tp3t5kuIuHiYNQxdMJq0fqMEOizx8gjJAryRVdcqT9M1XvCeq_i7C3kKbBcRhwvpnqKdTXMcRPDfYU0mU19iPXbUtGwUdRWUa5AlnfL5g4J28fp-tbBf30Tx7dpyfWsg8Z3CvqW1P4cmum7SaDxsrqPi6mxzktgj86bW5EVvFbnpMpP37UkjGJ8Z64_pTSVidPt5R8UZI_nQxYxhenACWQscH4c_UEU5l03wU8UK297uunQNO9wzIisRyAAMnnNV9ZDJNGsXDTPxk4GT8_vXG_0LVdLT8XewKsDNt3pKrjJyQPdJpeSg8fC1aP7NbDXJmisvEtrNIo3FIlJIH0NMJfYpdpnbqiN_8AMigPZlBrGneJ7O6OnXP4K7UqZfLO0qeQc1tFxfW0JIeZFx2LUhv-xtH_2Q"
+    },
+    "pin": {
+        "value": "1234",
+        "length": 4
+    },
+    "manifest": "{{contract.response.body.manifestUrl}}"
+}
+
+### Presentation
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "includeReceipt": true,
+  "authority": "{{authority}}",
+  "registration": {
+    "clientName": "Airport Passport Verifier"
+  },
+  "callback": {
+    "url": "{{webhook}}",
+    "state": "my-verification-state",
+    "headers": {
+      "api-key": "my-api-key"
+    }
+  },
+  "requestedCredentials": [
+    {
+      "type": "{{credentialType}}",
+      "purpose": "Please present yourself",
+      "acceptedIssuers": [
+        "{{authority}}"
+      ],
+      "configuration": {
+        "validation": {
+          "allowRevoked": false,
+          "validateLinkedDomain": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+@credentialType = CustomsFormNameCredentialType2
+@contractName = CustomsFormNameContract2
+### Admin access token endpoint
+# @name adminLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{adminScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Create contract
+# @name contract
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts
+Authorization: Bearer {{adminLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "{{contractName}}",
+  "rules": {
+    "attestations": {
+      "selfIssued": {
+        "mapping": [
+          {
+            "outputClaim": "visitPurpose",
+            "required": true,
+            "inputClaim": "visitPurpose",
+            "indexed": false
+          }
+        ],
+        "required": true
+      }
+    },
+    "validityInterval": 2592000,
+    "vc": {
+      "type": [
+        "{{credentialType}}"
+      ]
+    }
+  },
+  "displays": [
+    {
+      "locale": "en-US",
+      "card": {
+        "backgroundColor": "#000000",
+        "description": "OpenSlava Customs Form",
+        "issuedBy": "OpenSlava Customs Form Issuer",
+        "textColor": "#FFFFFF",
+        "title": "OpenSlava Customs Form",
+        "logo": {
+          "description": "OpenSlava Customs Form",
+          "uri": "https://azir-entra-issuer.pages.dev/OpenSlava/customs.png"
+        }
+      },
+      "consent": {
+        "instructions": "Please accept the OpenSlava Customs Form credential",
+        "title": "Do you want to accept the OpenSlava Customs Form credenial?"
+      },
+      "claims": [
+        {
+          "claim": "vc.credentialSubject.visitPurpose",
+          "label": "The purpose of your visit",
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}
+
+### Issuance Access Token Endpoint
+# @name issuanceLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{issuanceScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Issuance
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createIssuanceRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "includeQRCode": false,
+    "callback": {
+        "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+        "state": "my-state",
+        "headers": {
+            "api-key": "my-api-key"
+        }
+    },
+    "authority": "{{authority}}",
+    "registration": {
+        "clientName": "OpenSlava Customs Form Issuer"
+    },
+    "type": "{{credentialType}}",
+    "manifest": "{{contract.response.body.manifestUrl}}"
+}
+
+### Presentation
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "includeReceipt": true,
+  "authority": "{{authority}}",
+  "registration": {
+    "clientName": "Customs Form Verifier"
+  },
+  "callback": {
+    "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+    "state": "my-verification-state",
+    "headers": {
+      "api-key": "my-api-key"
+    }
+  },
+  "requestedCredentials": [
+    {
+      "type": "{{credentialType}}",
+      "purpose": "Please present yourself",
+      "acceptedIssuers": [
+        "{{authority}}"
+      ],
+      "configuration": {
+        "validation": {
+          "allowRevoked": false,
+          "validateLinkedDomain": true
+        }
+      }
+    }
+  ]
+}
