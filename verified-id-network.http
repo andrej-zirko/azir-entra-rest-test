@@ -1,0 +1,15 @@
+### Admin access token endpoint
+# @name adminLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{adminScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Search for issuers
+GET https://verifiedid.did.msidentity.com/v1.0/verifiableCredentialsNetwork/authorities?filter=linkeddomainurls%20like%20azir
+
+Authorization: Bearer {{adminLogin.response.body.access_token}}
+Content-Type: application/json

@@ -1,0 +1,65 @@
+### Access token endpoint
+# @name login
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope=3db474b9-6a0c-4840-96ac-1fceb342124f/.default
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Issuance
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createIssuanceRequest
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "callback": {
+        "url": "https://ce4a76b5b73d298f17b9802887e94e4f.m.pipedream.net",
+        "state": "my-state",
+        "headers": {
+            "api-key": "my-api-key"
+        }
+    },
+    "authority": "did:web:azir-entra-issuer.pages.dev",
+    "registration": {
+        "clientName": "Mighty Issuer"
+    },
+    "type": "VerifiedEmployee",
+    "manifest": "https://verifiedid.did.msidentity.com/v1.0/tenants/7a71945d-a12f-415d-b1d8-90985dbb1829/verifiableCredentials/contracts/8449b104-a942-2c72-1ffe-8a18acfbbafe/manifest"
+}
+
+### Presentation
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "includeReceipt": true,
+  "authority": "did:web:azir-entra-issuer.pages.dev",
+  "registration": {
+    "clientName": "Mighty verifier"
+  },
+  "callback": {
+    "url": "https://eoyuxi2bw2tghn.m.pipedream.net",
+    "state": "my-verification-state",
+    "headers": {
+      "api-key": "my-api-key"
+    }
+  },
+  "requestedCredentials": [
+    {
+      "type": "VerifiedEmployee",
+      "purpose": "So we can see that you are an employee",
+      "acceptedIssuers": [
+        "did:web:azir-entra-issuer.pages.dev"
+      ],
+      "configuration": {
+        "validation": {
+          "allowRevoked": false,
+          "validateLinkedDomain": true
+        }
+      }
+    }
+  ]
+}

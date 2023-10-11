@@ -1,0 +1,42 @@
+### Access token endpoint
+# @name login
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{adminScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### List of authorities
+GET https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities
+Authorization: Bearer {{login.response.body.access_token}}
+
+### List contracts
+GET https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Get contract
+@getContractId = d843d11c-84b9-dc23-242b-4ee275ea6cbb
+GET https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts/{{getContractId}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Generate DID document
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/generateDidDocument
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "domainUrl":"https://www.doyouevencheck.com/"
+}
+
+### Search credential
+@contractId = 1234567
+@hashedsearchclaimvalue = XXX
+GET https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts/{{contractId}}/credentials?filter=indexclaimhash eq {{{hashedsearchclaimvalue}}}
+
+### Revoke credential
+@credentialId = 1234567
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts/{{contractId}}/credentials/{{credentialId}}/revoke
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json

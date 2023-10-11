@@ -1,0 +1,139 @@
+@credentialType = SurnameCredential6
+@contractName = SurnameContractName6
+@presentationCredentialType = MyCredential9
+
+### Admin access token endpoint
+# @name adminLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{adminScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Create contract
+# @name contract
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/authorities/{{authorityId}}/contracts
+Authorization: Bearer {{adminLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "{{contractName}}",
+  "rules": {
+    "attestations": {
+      "presentations": [
+        {
+          "mapping": [
+            {
+              "outputClaim": "surname",
+              "required": true,
+              "inputClaim": "$.vc.credentialSubject.familyName",
+              "indexed": false
+            }
+          ],
+          "credentialType": "{{presentationCredentialType}}",
+          "required": true
+        }
+      ]
+    },
+    "validityInterval": 2592000,
+    "vc": {
+      "type": [
+        "{{credentialType}}"
+      ]
+    }
+  },
+  "displays": [{
+    "locale": "en-US",
+    "card": {
+      "backgroundColor": "#E0E0E0",
+      "description": "Surname holder ",
+      "issuedBy": "OpenSlava",
+      "textColor": "#000000",
+      "title": "Surname Holder",
+      "logo": {
+        "description": "Default VC logo",
+        "uri": "https://www.openslava.sk/2023/imgs/logo-icon.png"
+      }
+    },
+    "consent": {
+      "instructions": "Please click accept to add this special OpenSlava credential",
+      "title": "Do you want to accept the OpenSlava credenial?"
+    },
+    "claims": [
+      {
+        "claim": "vc.credentialSubject.surname",
+        "label": "Surname",
+        "type": "String"
+      }
+    ]
+  }]
+}
+
+### Issuance Access Token Endpoint
+# @name issuanceLogin
+POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{clientId}}
+&scope={{issuanceScope}}
+&client_secret={{clientSecret}}
+&grant_type=client_credentials
+
+### Issuance
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createIssuanceRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "includeQRCode": false,
+    "callback": {
+        "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+        "state": "my-state",
+        "headers": {
+            "api-key": "my-api-key"
+        }
+    },
+    "authority": "{{authority}}",
+    "registration": {
+        "clientName": "Info About The Issuer - This will be displayed in the app"
+    },
+    "type": "{{credentialType}}",
+    "manifest": "{{contract.response.body.manifestUrl}}"
+}
+
+### Presentation
+POST https://verifiedid.did.msidentity.com/v1.0/verifiableCredentials/createPresentationRequest
+Authorization: Bearer {{issuanceLogin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "includeReceipt": true,
+  "authority": "{{authority}}",
+  "registration": {
+    "clientName": "Surname club verifier"
+  },
+  "callback": {
+    "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+    "state": "my-verification-state",
+    "headers": {
+      "api-key": "my-api-key"
+    }
+  },
+  "requestedCredentials": [
+    {
+      "type": "{{credentialType}}",
+      "purpose": "So we can verify you",
+      "acceptedIssuers": [
+        "{{authority}}"
+      ],
+      "configuration": {
+        "validation": {
+          "allowRevoked": false,
+          "validateLinkedDomain": true
+        }
+      }
+    }
+  ]
+}
