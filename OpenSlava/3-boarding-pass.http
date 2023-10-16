@@ -1,7 +1,7 @@
-@credentialType = BoardingPassNameCredentialType7
-@contractName = BoardingPassNameContract7
-@referencePassportCredentialType = PassportNameCredentialType2
-@referenceTicketType = AirlineTicketNameCredentialType3
+@credentialType = NameBoardingPassCredentialType11
+@contractName = NameBoardingPassContract11
+@referencePassportCredentialType = NamePassportCredentialType6
+@referenceTicketType = NameAirlineTicketCredentialType4
 @webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
 
 ### Admin access token endpoint
@@ -41,6 +41,7 @@ Content-Type: application/json
             }
           ],
           "credentialType": "{{referenceTicketType}}",
+          "trustedIssuers": ["{{authority}}"],
           "required": true
         },
         {
@@ -53,6 +54,7 @@ Content-Type: application/json
             }
           ],
           "credentialType": "{{referencePassportCredentialType}}",
+          "trustedIssuers": ["{{authority}}"],
           "required": true
         }        
       ]

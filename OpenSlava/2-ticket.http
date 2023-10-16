@@ -1,5 +1,5 @@
-@credentialType = AirlineTicketNameCredentialType3
-@contractName = AirlineTicketNameContract3
+@credentialType = NameAirlineTicketCredentialType4
+@contractName = NameAirlineTicketContract4
 @webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
 
 ### Admin access token endpoint

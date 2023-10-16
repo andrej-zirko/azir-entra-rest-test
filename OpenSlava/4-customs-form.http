@@ -1,5 +1,5 @@
-@credentialType = CustomsFormNameCredentialType2
-@contractName = CustomsFormNameContract2
+@credentialType = NameCustomsFormCredentialType3
+@contractName = NameCustomsFormContract3
 ### Admin access token endpoint
 # @name adminLogin
 POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token

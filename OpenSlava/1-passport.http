@@ -1,5 +1,5 @@
-@credentialType = PassportNameCredentialType3
-@contractName = PassportNameContract3
+@credentialType = NamePassportCredentialType6
+@contractName = NamePassportContract6
 @webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
 
 ### Admin access token endpoint
