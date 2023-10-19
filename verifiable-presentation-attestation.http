@@ -1,10 +1,11 @@
 @credentialType = SurnameCredential6
 @contractName = SurnameContractName6
 @presentationCredentialType = MyCredential9
+@webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
 
 ### Admin access token endpoint
 # @name adminLogin
-POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token
 Content-Type: application/x-www-form-urlencoded
 
 client_id={{clientId}}
@@ -73,7 +74,7 @@ Content-Type: application/json
 
 ### Issuance Access Token Endpoint
 # @name issuanceLogin
-POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token
 Content-Type: application/x-www-form-urlencoded
 
 client_id={{clientId}}
@@ -89,7 +90,7 @@ Content-Type: application/json
 {
     "includeQRCode": false,
     "callback": {
-        "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+        "url": "{{webhook}}",
         "state": "my-state",
         "headers": {
             "api-key": "my-api-key"
@@ -115,7 +116,7 @@ Content-Type: application/json
     "clientName": "Surname club verifier"
   },
   "callback": {
-    "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+    "url": "{{webhook}}",
     "state": "my-verification-state",
     "headers": {
       "api-key": "my-api-key"

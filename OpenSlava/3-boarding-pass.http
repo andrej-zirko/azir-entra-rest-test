@@ -1,7 +1,7 @@
-@credentialType = NameBoardingPassCredentialType11
-@contractName = NameBoardingPassContract11
-@referencePassportCredentialType = NamePassportCredentialType6
-@referenceTicketType = NameAirlineTicketCredentialType4
+@credentialType = BoardingPassCredentialTypeREPLACEME1
+@contractName = BoardingPassContractREPLACEME1
+@referencePassportCredentialType = PassportCredentialTypeREPLACEME1
+@referenceTicketType = AirlineTicketCredentialTypeREPLACEME1
 @webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
 
 ### Admin access token endpoint

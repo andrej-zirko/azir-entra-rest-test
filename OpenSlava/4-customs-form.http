@@ -1,5 +1,7 @@
-@credentialType = NameCustomsFormCredentialType3
-@contractName = NameCustomsFormContract3
+@credentialType = NameCustomsFormCredentialTypeREPLACEME1
+@contractName = NameCustomsFormContractREPLACEME1
+@webhook = https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889
+
 ### Admin access token endpoint
 # @name adminLogin
 POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token
@@ -86,7 +88,7 @@ Content-Type: application/json
 {
     "includeQRCode": false,
     "callback": {
-        "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+        "url": "{{webhook}}",
         "state": "my-state",
         "headers": {
             "api-key": "my-api-key"
@@ -112,7 +114,7 @@ Content-Type: application/json
     "clientName": "Customs Form Verifier"
   },
   "callback": {
-    "url": "https://webhook.site/126fef0e-ee5f-4952-94d7-404985c22889",
+    "url": "{{webhook}}",
     "state": "my-verification-state",
     "headers": {
       "api-key": "my-api-key"

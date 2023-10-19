@@ -1,6 +1,6 @@
 ### Access token endpoint
 # @name login
-POST https://login.microsoftonline.com/7a71945d-a12f-415d-b1d8-90985dbb1829/oauth2/v2.0/token
+POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token
 Content-Type: application/x-www-form-urlencoded
 
 client_id={{clientId}}
